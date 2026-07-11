@@ -1,3 +1,7 @@
+import random
+import secrets
+import string
+
 # ----------------------------------------
 # Random alphanumeric generators
 # ----------------------------------------
@@ -20,7 +24,7 @@ def generate_alphanumeric(
     else:
         raise ValueError("Must include at least digits or letters")
 
-    return "".join(random.choices(population, k=length))
+    return "".join(random.choices(population, k=length))  # noqa: S311
 
 
 def generate_numeric(length: int) -> str:
@@ -94,9 +98,8 @@ def generate_token(
     """
     if encoding == "hex":
         return secrets.token_hex(length // 2)
-    elif encoding == "base64":
+    if encoding == "base64":
         return secrets.token_urlsafe(length * 3 // 4).rstrip("=")
-    elif encoding == "bytes":
+    if encoding == "bytes":
         return secrets.token_bytes(length).hex()
-    else:
-        raise ValueError(f"Unsupported encoding: {encoding}")
+    raise ValueError(f"Unsupported encoding: {encoding}")
