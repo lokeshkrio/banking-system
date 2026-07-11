@@ -10,6 +10,6 @@ wheels/
 .venv
 
 #vs code
-.vscode
+.vscode/
 .env
 db
