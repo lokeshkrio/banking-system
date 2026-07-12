@@ -1,5 +1,6 @@
 import secrets
 import uuid
+from uuid6 import uuid7
 
 # common id generation strategy for fintech system
 # User ID                 -> UUIDv7
@@ -19,7 +20,7 @@ import uuid
 
 
 def generate_prefixed_id(prefix: str) -> str:
-    return f"{prefix}_{uuid.uuid4()}"
+    return f"{prefix}_{uuid7()}"
 
 
 def parse_prefixed_id(full_id: str) -> tuple[str, uuid.UUID]:
@@ -49,7 +50,9 @@ def validate_prefix(prefixed_id: str, expected_prefix: str) -> bool:
 # ----------------------------------------
 
 
-def mod11_compute_check_digit(base_str: str, weights: list[int] | None = None) -> int | None:
+def mod11_compute_check_digit(
+    base_str: str, weights: list[int] | None = None
+) -> int | None:
     """Compute Mod11 check digit."""
     if weights is None:
         weights = [2, 3, 4, 5, 6, 7, 8, 9]
@@ -61,9 +64,7 @@ def mod11_compute_check_digit(base_str: str, weights: list[int] | None = None) -
 
     if rem == 0:
         return 0
-    if rem == 1:
-        return None
-    return 11 - rem
+    return None if rem == 1 else 11 - rem
 
 
 def mod11_validate(number: str) -> bool:
@@ -252,7 +253,9 @@ def generate_bank_account_number(bank_code: str = "UX") -> str:
     return generate_iban(country_code=bank_code.upper(), bban_length=14)
 
 
-def validate_bank_account_number(account_number: str, expected_bank_code: str | None = None) -> bool:
+def validate_bank_account_number(
+    account_number: str, expected_bank_code: str | None = None
+) -> bool:
     """
     Validate a bank account number:
     - Must be 18 characters.
@@ -262,7 +265,194 @@ def validate_bank_account_number(account_number: str, expected_bank_code: str | 
     if not account_number or len(account_number) != 18:
         return False
 
-    if expected_bank_code is not None and not account_number.upper().startswith(expected_bank_code.upper()):
+    if expected_bank_code is not None and not account_number.upper().startswith(
+        expected_bank_code.upper()
+    ):
         return False
 
     return validate_iban(account_number)
+
+
+# ----------------------------------------
+# Specific ID Generators & Validators (Internal UUIDv7)
+# ----------------------------------------
+from app.core.constants import InternalIDPrefix, ExternalReferencePrefix, JournalReferencePrefix
+
+def generate_user_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.USER)
+
+def validate_user_id(user_id: str) -> bool:
+    return validate_prefix(user_id, InternalIDPrefix.USER)
+
+def generate_customer_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.CUSTOMER)
+
+def validate_customer_id(customer_id: str) -> bool:
+    return validate_prefix(customer_id, InternalIDPrefix.CUSTOMER)
+
+def generate_account_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.ACCOUNT)
+
+def validate_account_id(account_id: str) -> bool:
+    return validate_prefix(account_id, InternalIDPrefix.ACCOUNT)
+
+def generate_transaction_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.TRANSACTION)
+
+def validate_transaction_id(transaction_id: str) -> bool:
+    return validate_prefix(transaction_id, InternalIDPrefix.TRANSACTION)
+
+def generate_journal_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.JOURNAL)
+
+def validate_journal_id(journal_id: str) -> bool:
+    return validate_prefix(journal_id, InternalIDPrefix.JOURNAL)
+
+def generate_posting_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.POSTING)
+
+def validate_posting_id(posting_id: str) -> bool:
+    return validate_prefix(posting_id, InternalIDPrefix.POSTING)
+
+def generate_kyc_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.KYC)
+
+def validate_kyc_id(kyc_id: str) -> bool:
+    return validate_prefix(kyc_id, InternalIDPrefix.KYC)
+
+def generate_session_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.SESSION)
+
+def validate_session_id(session_id: str) -> bool:
+    return validate_prefix(session_id, InternalIDPrefix.SESSION)
+
+def generate_audit_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.AUDIT)
+
+def validate_audit_id(audit_id: str) -> bool:
+    return validate_prefix(audit_id, InternalIDPrefix.AUDIT)
+
+def generate_transfer_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.TRANSFER)
+
+def validate_transfer_id(transfer_id: str) -> bool:
+    return validate_prefix(transfer_id, InternalIDPrefix.TRANSFER)
+
+def generate_dispute_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.DISPUTE)
+
+def validate_dispute_id(dispute_id: str) -> bool:
+    return validate_prefix(dispute_id, InternalIDPrefix.DISPUTE)
+
+def generate_refund_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.REFUND)
+
+def validate_refund_id(refund_id: str) -> bool:
+    return validate_prefix(refund_id, InternalIDPrefix.REFUND)
+
+def generate_notification_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.NOTIFICATION)
+
+def validate_notification_id(notification_id: str) -> bool:
+    return validate_prefix(notification_id, InternalIDPrefix.NOTIFICATION)
+
+def generate_webhook_id() -> str:
+    return generate_prefixed_id(InternalIDPrefix.WEBHOOK)
+
+def validate_webhook_id(webhook_id: str) -> bool:
+    return validate_prefix(webhook_id, InternalIDPrefix.WEBHOOK)
+
+
+# ----------------------------------------
+# Specific ID Generators & Validators (External Mod11)
+# ----------------------------------------
+
+def generate_customer_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.CUSTOMER, length=12)
+
+def validate_customer_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.CUSTOMER) and mod11_validate(ref)
+
+def generate_account_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.ACCOUNT, length=12)
+
+def validate_account_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.ACCOUNT) and mod11_validate(ref)
+
+def generate_transaction_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.TRANSACTION, length=12)
+
+def validate_transaction_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.TRANSACTION) and mod11_validate(ref)
+
+def generate_dispute_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.DISPUTE, length=12)
+
+def validate_dispute_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.DISPUTE) and mod11_validate(ref)
+
+def generate_refund_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.REFUND, length=12)
+
+def validate_refund_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.REFUND) and mod11_validate(ref)
+
+def generate_kyc_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.KYC, length=12)
+
+def validate_kyc_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.KYC) and mod11_validate(ref)
+
+def generate_invoice_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.INVOICE, length=12)
+
+def validate_invoice_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.INVOICE) and mod11_validate(ref)
+
+def generate_order_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.ORDER, length=12)
+
+def validate_order_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.ORDER) and mod11_validate(ref)
+
+def generate_notification_ref() -> str:
+    return generate_mod11_id(ExternalReferencePrefix.NOTIFICATION, length=12)
+
+def validate_notification_ref(ref: str) -> bool:
+    return ref.startswith(ExternalReferencePrefix.NOTIFICATION) and mod11_validate(ref)
+
+
+# ----------------------------------------
+# Specific ID Generators & Validators (Journal References Mod11)
+# ----------------------------------------
+
+def generate_reversal_ref() -> str:
+    return generate_mod11_id(JournalReferencePrefix.REVERSAL, length=12)
+
+def validate_reversal_ref(ref: str) -> bool:
+    return ref.startswith(JournalReferencePrefix.REVERSAL) and mod11_validate(ref)
+
+def generate_adjustment_ref() -> str:
+    return generate_mod11_id(JournalReferencePrefix.ADJUSTMENT, length=12)
+
+def validate_adjustment_ref(ref: str) -> bool:
+    return ref.startswith(JournalReferencePrefix.ADJUSTMENT) and mod11_validate(ref)
+
+
+# ----------------------------------------
+# Other Specific Generators (Luhn / Miscellaneous)
+# ----------------------------------------
+
+def generate_card_number(bin_prefix: str = "400000") -> str:
+    """Generate a 16-digit Luhn-compliant card number."""
+    return generate_luhn_id(prefix=bin_prefix, length=16)
+
+def validate_card_number(card_number: str) -> bool:
+    return luhn_validate(card_number)
+
+def generate_wallet_id() -> str:
+    """Generate a UUIDv7 wallet ID."""
+    return generate_prefixed_id("wal")
+
+def validate_wallet_id(wallet_id: str) -> bool:
+    return validate_prefix(wallet_id, "wal")

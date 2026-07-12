@@ -4,7 +4,11 @@ from app.common.enums import AccountStatus, AccountType, Currency, UserStatus
 from app.domain.accounts import Account
 from app.domain.customer.models import Customer
 from app.domain.ledger.models import JournalEntry
-from app.domain.repository import AccountRepository, CustomerRepository, JournalRepository
+from app.domain.repository import (
+    AccountRepository,
+    CustomerRepository,
+    JournalRepository,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -31,10 +35,14 @@ class InMemoryAccountRepository:
         return self._store.get(account_id)
 
     def get_by_ledger_id(self, ledger_account_id: str) -> Account | None:
-        for acc in self._store.values():
-            if acc.ledger_account_id == ledger_account_id:
-                return acc
-        return None
+        return next(
+            (
+                acc
+                for acc in self._store.values()
+                if acc.ledger_account_id == ledger_account_id
+            ),
+            None,
+        )
 
     def save(self, account: Account) -> None:
         self._store[account.id] = account

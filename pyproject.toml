@@ -33,6 +33,7 @@ dependencies = [
     "celery[redis]>=5.4.0",
     # Utilities
     "python-multipart>=0.0.18",
+    "uuid6>=2025.0.1",
 ]
 
 [project.optional-dependencies]
