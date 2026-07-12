@@ -25,3 +25,15 @@ class LedgerAccountType(StrEnum):
     EQUITY = "EQUITY"
     REVENUE = "REVENUE"
     EXPENSE = "EXPENSE"
+
+
+class JournalStatus(StrEnum):
+    """Lifecycle status of a journal entry.
+
+    State transitions:
+        DRAFT → POSTED → REVERSED
+    """
+
+    DRAFT = "DRAFT"
+    POSTED = "POSTED"
+    REVERSED = "REVERSED"

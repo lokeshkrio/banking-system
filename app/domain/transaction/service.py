@@ -1,7 +1,8 @@
+from app.common.enums import AccountStatus
 from app.common.ids import generate_prefixed_id
 from app.common.money import Money
 from app.core.constants import InternalIDPrefix
-from app.core.exceptions import InsufficientFundsError
+from app.core.exceptions import AccountNotActiveError, InsufficientFundsError
 from app.domain.accounts import Account
 from app.domain.ledger.enums import PostingType
 from app.domain.ledger.models import JournalEntry, LedgerAccount, Posting
@@ -29,6 +30,11 @@ class TransactionService:
 
         Credits the funding source account and debits the customer account.
         """
+        if account.status != AccountStatus.ACTIVE:
+            raise AccountNotActiveError(
+                f"Account '{account.id}' is {account.status}."
+            )
+
         if account.currency != amount.currency_code:
             raise ValueError(
                 f"Account currency ({account.currency}) "
@@ -59,8 +65,8 @@ class TransactionService:
                     amount=amount,
                 ),
             ],
-            posted=False,
         )
+
 
         accounts = {
             ledger_account.id: ledger_account,
@@ -94,6 +100,11 @@ class TransactionService:
         Credits the customer account and debits the clearing account.
         Raises InsufficientFundsError if customer account has insufficient balance.
         """
+        if account.status != AccountStatus.ACTIVE:
+            raise AccountNotActiveError(
+                f"Account '{account.id}' is {account.status}."
+            )
+
         if account.currency != amount.currency_code:
             raise ValueError(
                 f"Account currency ({account.currency}) "
@@ -127,8 +138,8 @@ class TransactionService:
                     amount=amount,
                 ),
             ],
-            posted=False,
         )
+
 
         accounts = {
             ledger_account.id: ledger_account,

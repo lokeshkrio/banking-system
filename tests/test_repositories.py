@@ -91,7 +91,6 @@ def test_journal_repository_protocol() -> None:
         reference="REF1",
         description="Initial deposit",
         postings=[],
-        posted=False,
     )
 
     repo.save(journal)

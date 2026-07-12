@@ -1,17 +1,68 @@
 from dataclasses import dataclass, field
 
 from app.common.money import Money
-from app.domain.ledger.enums import LedgerAccountType, PostingType
+from app.domain.ledger.enums import JournalStatus, LedgerAccountType, PostingType
 from app.domain.ledger.exceptions import CurrencyMismatchError
+
+
+# Account types whose normal balance is a DEBIT (i.e. debits increase, credits decrease).
+_DEBIT_NORMAL = {LedgerAccountType.ASSET, LedgerAccountType.EXPENSE}
 
 
 @dataclass(slots=True)
 class LedgerAccount:
+    """Mutable ledger account with controlled balance access.
+
+    Balance mutations are only permitted through :meth:`apply_debit` and
+    :meth:`apply_credit`, which encode standard double-entry normal-balance rules.
+    Direct assignment to ``balance`` is discouraged.
+    """
+
     id: str
     account_id: str
     currency: str
     account_type: LedgerAccountType
-    balance: Money
+    _balance: Money = field(repr=False)
+
+    def __init__(
+        self,
+        id: str,
+        account_id: str,
+        currency: str,
+        account_type: LedgerAccountType,
+        balance: Money,
+    ) -> None:
+        self.id = id
+        self.account_id = account_id
+        self.currency = currency
+        self.account_type = account_type
+        self._balance = balance
+
+    @property
+    def balance(self) -> Money:
+        return self._balance
+
+    def apply_debit(self, amount: Money) -> None:
+        """Apply a debit posting to this account.
+
+        - ASSET / EXPENSE → balance **increases**.
+        - LIABILITY / EQUITY / REVENUE → balance **decreases**.
+        """
+        if self.account_type in _DEBIT_NORMAL:
+            self._balance = self._balance + amount
+        else:
+            self._balance = self._balance - amount
+
+    def apply_credit(self, amount: Money) -> None:
+        """Apply a credit posting to this account.
+
+        - ASSET / EXPENSE → balance **decreases**.
+        - LIABILITY / EQUITY / REVENUE → balance **increases**.
+        """
+        if self.account_type in _DEBIT_NORMAL:
+            self._balance = self._balance - amount
+        else:
+            self._balance = self._balance + amount
 
 
 @dataclass(slots=True)
@@ -27,14 +78,19 @@ class JournalEntry:
     """Immutable accounting record.
 
     Once constructed, a JournalEntry must not be mutated.
-    Use ``dataclasses.replace(journal, posted=True)`` to produce a posted copy.
+    Use ``dataclasses.replace(journal, status=JournalStatus.POSTED)`` to produce a posted copy.
     """
 
     id: str
     reference: str
     description: str
     postings: list[Posting]
-    posted: bool = field(default=False)
+    status: JournalStatus = field(default=JournalStatus.DRAFT)
+
+    @property
+    def is_posted(self) -> bool:
+        """Convenience check: True if this journal has been posted."""
+        return self.status is JournalStatus.POSTED
 
     @property
     def is_balanced(self) -> bool:

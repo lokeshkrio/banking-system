@@ -5,7 +5,7 @@ import pytest
 
 from app.common.enums import AccountStatus, AccountType, Currency
 from app.common.money import Money
-from app.core.exceptions import InsufficientFundsError, SameAccountTransferError
+from app.core.exceptions import AccountNotActiveError, InsufficientFundsError, SameAccountTransferError
 from app.domain.accounts import Account
 from app.domain.ledger.enums import LedgerAccountType
 from app.domain.ledger.models import LedgerAccount
@@ -241,4 +241,40 @@ class TestTransferServiceP2P:
                 reference="TXN_FX_NORATE",
                 source_fx_ledger_account=source_fx,
                 destination_fx_ledger_account=dest_fx,
+            )
+
+    def test_transfer_inactive_source_raises_error(self) -> None:
+        sender = make_account("acc_usd_source", status=AccountStatus.FROZEN)
+        receiver = make_account("acc_usd_dest")
+        
+        sender_la = make_ledger_account(sender, balance_minor=5000)
+        receiver_la = make_ledger_account(receiver, balance_minor=0)
+        service = make_transfer_service()
+
+        with pytest.raises(AccountNotActiveError, match="Source account"):
+            service.execute_p2p_transfer(
+                source_account=sender,
+                destination_account=receiver,
+                source_ledger_account=sender_la,
+                destination_ledger_account=receiver_la,
+                amount=Money(1000, "USD"),
+                reference="TXN_INACTIVE_SRC",
+            )
+
+    def test_transfer_inactive_destination_raises_error(self) -> None:
+        sender = make_account("acc_usd_source")
+        receiver = make_account("acc_usd_dest", status=AccountStatus.CLOSED)
+        
+        sender_la = make_ledger_account(sender, balance_minor=5000)
+        receiver_la = make_ledger_account(receiver, balance_minor=0)
+        service = make_transfer_service()
+
+        with pytest.raises(AccountNotActiveError, match="Destination account"):
+            service.execute_p2p_transfer(
+                source_account=sender,
+                destination_account=receiver,
+                source_ledger_account=sender_la,
+                destination_ledger_account=receiver_la,
+                amount=Money(1000, "USD"),
+                reference="TXN_INACTIVE_DST",
             )

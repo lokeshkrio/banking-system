@@ -2,7 +2,7 @@ import pytest
 
 from app.common.enums import AccountStatus, AccountType, Currency
 from app.common.money import Money
-from app.core.exceptions import InsufficientFundsError
+from app.core.exceptions import AccountNotActiveError, InsufficientFundsError
 from app.domain.accounts import Account
 from app.domain.ledger.enums import LedgerAccountType
 from app.domain.ledger.models import LedgerAccount
@@ -14,13 +14,15 @@ from app.domain.transaction.service import TransactionService
 def make_account(
     account_id: str = "acc_001",
     currency: Currency = Currency.USD,
+    status: AccountStatus = AccountStatus.ACTIVE,
 ) -> Account:
     return Account(
         id=account_id,
         customer_id="cst_001",
         currency=currency,
         account_type=AccountType.CHECKING,
-        status=AccountStatus.ACTIVE,
+        status=status,
+
         ledger_account_id=f"la_{account_id}",
     )
 
@@ -151,4 +153,28 @@ def test_execute_withdrawal_insufficient_funds() -> None:
             clearing_ledger_account=clearing_ledger,
             amount=Money(2000, "USD"),
             reference="WTH_BROKE",
+        )
+
+
+def test_deposit_inactive_account_raises_error() -> None:
+    account = make_account("acc_001", status=AccountStatus.FROZEN)
+    ledger_acct = make_ledger_account(account)
+    funding_acct = LedgerAccount(id="la_funding", account_id="acc_funding", currency=Currency.USD, account_type=LedgerAccountType.LIABILITY, balance=Money(1000, "USD"))
+    service = TransactionService(ledger_service=LedgerService())
+
+    with pytest.raises(AccountNotActiveError):
+        service.execute_deposit(
+            account, ledger_acct, funding_acct, Money(500, "USD"), "REF006"
+        )
+
+
+def test_withdrawal_inactive_account_raises_error() -> None:
+    account = make_account("acc_001", status=AccountStatus.SUSPENDED)
+    ledger_acct = make_ledger_account(account, balance_minor=1000)
+    clearing_acct = LedgerAccount(id="la_clearing", account_id="acc_clearing", currency=Currency.USD, account_type=LedgerAccountType.ASSET, balance=Money(1000, "USD"))
+    service = TransactionService(ledger_service=LedgerService())
+
+    with pytest.raises(AccountNotActiveError):
+        service.execute_withdrawal(
+            account, ledger_acct, clearing_acct, Money(500, "USD"), "REF007"
         )

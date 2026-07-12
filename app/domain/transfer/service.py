@@ -10,10 +10,12 @@ Flow:
     Transfer (COMPLETED, journal_id linked)
 """
 
+from app.common.enums import AccountStatus
 from app.common.ids import generate_prefixed_id
 from app.common.money import Money
 from app.core.constants import InternalIDPrefix
 from app.core.exceptions import (
+    AccountNotActiveError,
     InsufficientFundsError,
     SameAccountTransferError,
 )
@@ -74,6 +76,16 @@ class TransferService:
         if source_account.id == destination_account.id:
             raise SameAccountTransferError()
 
+        if source_account.status != AccountStatus.ACTIVE:
+            raise AccountNotActiveError(
+                f"Source account '{source_account.id}' is {source_account.status}."
+            )
+
+        if destination_account.status != AccountStatus.ACTIVE:
+            raise AccountNotActiveError(
+                f"Destination account '{destination_account.id}' is {destination_account.status}."
+            )
+
         if source_account.currency != amount.currency_code:
             raise ValueError(
                 f"Source account currency ({source_account.currency}) "
@@ -112,7 +124,6 @@ class TransferService:
                         amount=amount,
                     ),
                 ],
-                posted=False,
             )
 
             # Post the journal
@@ -173,7 +184,6 @@ class TransferService:
                         amount=amount,
                     ),
                 ],
-                posted=False,
             )
 
             # 2. Destination Journal (in destination currency)
@@ -195,7 +205,6 @@ class TransferService:
                         amount=converted_amount,
                     ),
                 ],
-                posted=False,
             )
 
             # Post Source Journal

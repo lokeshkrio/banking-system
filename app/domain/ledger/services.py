@@ -3,12 +3,9 @@ from dataclasses import replace
 
 from app.common.ids import generate_prefixed_id
 from app.core.constants import JournalReferencePrefix
-from app.domain.ledger.enums import LedgerAccountType, PostingType
+from app.domain.ledger.enums import JournalStatus, PostingType
 from app.domain.ledger.exceptions import JournalAlreadyPostedError, JournalImbalanceError
 from app.domain.ledger.models import JournalEntry, LedgerAccount
-
-# Account types whose normal balance is a DEBIT (i.e. debits increase, credits decrease).
-_DEBIT_NORMAL = {LedgerAccountType.ASSET, LedgerAccountType.EXPENSE}
 
 
 class LedgerService:
@@ -21,20 +18,18 @@ class LedgerService:
 
         Expects a mapping of ``ledger_account_id → LedgerAccount``.
 
-        Applies standard double-entry normal-balance rules:
-
-        - ASSET / EXPENSE  → Debit increases, Credit decreases.
-        - LIABILITY / EQUITY / REVENUE → Credit increases, Debit decreases.
+        Uses ``LedgerAccount.apply_debit()`` / ``apply_credit()`` which
+        encode standard double-entry normal-balance rules.
 
         Returns:
-            A new, frozen, posted ``JournalEntry`` (the original is never mutated).
+            A new, frozen ``JournalEntry`` with status ``POSTED``.
 
         Raises:
-            JournalAlreadyPostedError: If the journal has already been posted.
+            JournalAlreadyPostedError: If the journal is not in DRAFT status.
             JournalImbalanceError: If debits ≠ credits.
             ValueError: If a posting references an account not in ``accounts``.
         """
-        if journal.posted:
+        if journal.status is not JournalStatus.DRAFT:
             raise JournalAlreadyPostedError()
 
         if not journal.is_balanced:
@@ -47,22 +42,12 @@ class LedgerService:
                     f"Account '{posting.ledger_account_id}' not provided for posting."
                 )
 
-            debit_normal = account.account_type in _DEBIT_NORMAL
-
             if posting.side is PostingType.DEBIT:
-                # Debit: increases debit-normal accounts, decreases credit-normal accounts.
-                if debit_normal:
-                    account.balance += posting.amount
-                else:
-                    account.balance -= posting.amount
+                account.apply_debit(posting.amount)
             else:
-                # Credit: increases credit-normal accounts, decreases debit-normal accounts.
-                if debit_normal:
-                    account.balance -= posting.amount
-                else:
-                    account.balance += posting.amount
+                account.apply_credit(posting.amount)
 
-        return replace(journal, posted=True)
+        return replace(journal, status=JournalStatus.POSTED)
 
     def reverse(
         self,
@@ -72,8 +57,8 @@ class LedgerService:
         """Create a reversal journal for an existing posted journal entry.
 
         Does not mutate or delete the original journal, preserving immutable
-        accounting history. The reversal journal is returned *unposted* — call
-        ``post()`` to apply it.
+        accounting history. The reversal journal is returned in ``DRAFT``
+        status — call ``post()`` to apply it.
 
         Args:
             original_journal: The posted journal to reverse.
@@ -81,10 +66,10 @@ class LedgerService:
                 Defaults to ``JournalReferencePrefix.REVERSAL`` (``"REV"``).
 
         Raises:
-            ValueError: If ``original_journal`` has not been posted yet.
+            ValueError: If ``original_journal`` is not in ``POSTED`` status.
         """
-        if not original_journal.posted:
-            raise ValueError("Cannot reverse an unposted journal.")
+        if original_journal.status is not JournalStatus.POSTED:
+            raise ValueError("Cannot reverse a journal that is not POSTED.")
 
         new_postings = [
             replace(
@@ -100,5 +85,5 @@ class LedgerService:
             reference=f"{reference_prefix}-{original_journal.reference}",
             description=f"Reversal of {original_journal.id}",
             postings=new_postings,
-            posted=False,
+            status=JournalStatus.DRAFT,
         )

@@ -216,6 +216,11 @@ class InvalidAccountTransitionError(ConflictError):
     detail = "Invalid account status transition."
 
 
+class AccountNotActiveError(DomainValidationError):
+    error_code = "ACCOUNT_NOT_ACTIVE"
+    detail = "Account is not in ACTIVE status."
+
+
 # ============================================================================
 # Transfers
 # ============================================================================

@@ -3,7 +3,7 @@
 import pytest
 
 from app.common.money import Money
-from app.domain.ledger.enums import LedgerAccountType, PostingType
+from app.domain.ledger.enums import JournalStatus, LedgerAccountType, PostingType
 from app.domain.ledger.exceptions import (
     CurrencyMismatchError,
     JournalAlreadyPostedError,
@@ -111,7 +111,12 @@ class TestJournalIsBalanced:
     def test_journal_entry_is_frozen(self) -> None:
         journal = make_balanced_journal("la_a", "la_b", 500)
         with pytest.raises((AttributeError, TypeError)):
-            journal.posted = True  # type: ignore[misc]
+            journal.status = JournalStatus.POSTED  # type: ignore[misc]
+
+    def test_journal_defaults_to_draft(self) -> None:
+        journal = make_balanced_journal("la_a", "la_b", 500)
+        assert journal.status is JournalStatus.DRAFT
+        assert journal.is_posted is False
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +135,8 @@ class TestLedgerServicePost:
         journal = make_balanced_journal(receiver.id, sender.id, 1000)
         posted = self.service.post(journal, {sender.id: sender, receiver.id: receiver})
 
-        assert posted.posted is True
+        assert posted.status is JournalStatus.POSTED
+        assert posted.is_posted is True
 
     def test_post_original_journal_unchanged(self) -> None:
         """post() must not mutate the original JournalEntry."""
@@ -139,7 +145,7 @@ class TestLedgerServicePost:
         journal = make_balanced_journal(receiver.id, sender.id, 1000)
 
         self.service.post(journal, {sender.id: sender, receiver.id: receiver})
-        assert journal.posted is False  # original is untouched
+        assert journal.status is JournalStatus.DRAFT  # original is untouched
 
     def test_post_raises_if_already_posted(self) -> None:
         sender = make_ledger_account("acc_sender", balance_minor=5000)
@@ -229,7 +235,8 @@ class TestLedgerServiceReverse:
 
         reversal = self.service.reverse(posted)
 
-        assert reversal.posted is False
+        assert reversal.status is JournalStatus.DRAFT
+        assert reversal.is_posted is False
         assert reversal.id != posted.id
         assert "REV" in reversal.reference
         assert len(reversal.postings) == len(posted.postings)
@@ -243,7 +250,7 @@ class TestLedgerServiceReverse:
 
     def test_reverse_raises_on_unposted_journal(self) -> None:
         journal = make_balanced_journal("la_a", "la_b", 500)
-        with pytest.raises(ValueError, match="unposted"):
+        with pytest.raises(ValueError, match="not POSTED"):
             self.service.reverse(journal)
 
     def test_reverse_with_custom_prefix(self) -> None:
