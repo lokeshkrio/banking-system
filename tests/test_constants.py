@@ -27,10 +27,14 @@ def test_account_number_regex() -> None:
     acc_pattern = re.compile(ACCOUNT_NUMBER_REGEX)
 
     # Valid account numbers
-    assert acc_pattern.match("1" * ACCOUNT_NUMBER_LENGTH) is not None
+    assert acc_pattern.match("UX" + "1" * (ACCOUNT_NUMBER_LENGTH - 2)) is not None
+    assert acc_pattern.match("FR" + "0" * (ACCOUNT_NUMBER_LENGTH - 2)) is not None
 
     # Invalid account numbers
-    assert acc_pattern.match("1" * (ACCOUNT_NUMBER_LENGTH - 1)) is None
-    assert acc_pattern.match("1" * (ACCOUNT_NUMBER_LENGTH + 1)) is None
-    assert acc_pattern.match("a" * ACCOUNT_NUMBER_LENGTH) is None
+    assert acc_pattern.match("U" + "1" * (ACCOUNT_NUMBER_LENGTH - 1)) is None  # Too short bank code
+    assert acc_pattern.match("UBX" + "1" * (ACCOUNT_NUMBER_LENGTH - 3)) is None  # Too long bank code
+    assert acc_pattern.match("UX" + "1" * (ACCOUNT_NUMBER_LENGTH - 3)) is None  # Total too short
+    assert acc_pattern.match("UX" + "1" * (ACCOUNT_NUMBER_LENGTH - 1)) is None  # Total too long
+    assert acc_pattern.match("ux" + "1" * (ACCOUNT_NUMBER_LENGTH - 2)) is None  # Lowercase bank code
+    assert acc_pattern.match("UX" + "1" * (ACCOUNT_NUMBER_LENGTH - 3) + "A") is None  # Non-numeric suffix
     assert acc_pattern.match("") is None

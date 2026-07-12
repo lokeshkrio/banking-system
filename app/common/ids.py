@@ -232,3 +232,37 @@ def luhn_format(number: str) -> str:
     Format a number with spaces every 4 digits.
     """
     return " ".join(number[i : i + 4] for i in range(0, len(number), 4))
+
+
+# ----------------------------------------
+# Bank Account Number Generation (Mod97/IBAN)
+# ----------------------------------------
+
+
+def generate_bank_account_number(bank_code: str = "UX") -> str:
+    """
+    Generate an 18-character IBAN-like bank account number using the Mod97 strategy:
+    - 2-letter country code (default 'UX')
+    - 2 check digits
+    - 14-digit BBAN
+    """
+    if len(bank_code) != 2 or not bank_code.isalpha():
+        raise ValueError("Bank/Country code must be 2 alphabetic characters")
+
+    return generate_iban(country_code=bank_code.upper(), bban_length=14)
+
+
+def validate_bank_account_number(account_number: str, expected_bank_code: str | None = None) -> bool:
+    """
+    Validate a bank account number:
+    - Must be 18 characters.
+    - Uses validate_iban for Mod97 validation.
+    - Optionally, checks if it starts with expected_bank_code.
+    """
+    if not account_number or len(account_number) != 18:
+        return False
+
+    if expected_bank_code is not None and not account_number.upper().startswith(expected_bank_code.upper()):
+        return False
+
+    return validate_iban(account_number)

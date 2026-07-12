@@ -35,6 +35,8 @@ class InternalIDPrefix(StrEnum):
     SESSION = "ses"
     AUDIT = "adt"
 
+    TRANSFER = "trf"
+
     DISPUTE = "dsp"
     REFUND = "rfd"
 
@@ -64,6 +66,18 @@ class ExternalReferencePrefix(StrEnum):
     ORDER = "ORD"
 
     NOTIFICATION = "NTF"
+
+
+# =============================================================================
+# Journal Reference Prefixes
+# =============================================================================
+
+
+class JournalReferencePrefix(StrEnum):
+    """Reference prefixes used when creating journal entries programmatically."""
+
+    REVERSAL = "REV"
+    ADJUSTMENT = "ADJ"
 
 
 # =============================================================================
@@ -113,6 +127,10 @@ MAX_PASSWORD_LENGTH = 128
 
 OTP_LENGTH = 6
 
+# Fixed length of bank account numbers:
+# 2-char country code + 2-digit check check digits + 14-digit BBAN = 18 characters
+ACCOUNT_NUMBER_LENGTH = 18
+
 
 # =============================================================================
 # Reference Lengths
@@ -158,6 +176,9 @@ USERNAME_REGEX = (
     rf"{MAX_USERNAME_LENGTH - 1}"
     rf"}}$"
 )
+
+# Matches bank account numbers: 2 uppercase letters (country code) followed by 16 digits (check digits + BBAN).
+ACCOUNT_NUMBER_REGEX = rf"^[A-Z]{{2}}\d{{{ACCOUNT_NUMBER_LENGTH - 2}}}$"
 
 
 # =============================================================================

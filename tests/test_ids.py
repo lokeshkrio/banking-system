@@ -8,7 +8,7 @@ from app.common.ids import (
     mod11_compute_check_digit,
     mod11_validate,
 )
-from app.common.ranodoms import (
+from app.common.randoms import (
     generate_alphanumeric,
     generate_letters,
     generate_numeric,

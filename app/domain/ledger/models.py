@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from app.common.money import Money
-from app.domain.ledger.enums import PostingType
+from app.domain.ledger.enums import LedgerAccountType, PostingType
 from app.domain.ledger.exceptions import CurrencyMismatchError
 
 
@@ -10,6 +10,7 @@ class LedgerAccount:
     id: str
     account_id: str
     currency: str
+    account_type: LedgerAccountType
     balance: Money
 
 
@@ -21,8 +22,14 @@ class Posting:
     amount: Money
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class JournalEntry:
+    """Immutable accounting record.
+
+    Once constructed, a JournalEntry must not be mutated.
+    Use ``dataclasses.replace(journal, posted=True)`` to produce a posted copy.
+    """
+
     id: str
     reference: str
     description: str
@@ -36,7 +43,7 @@ class JournalEntry:
 
         currencies = {p.amount.currency_code for p in self.postings}
         if len(currencies) > 1:
-            raise CurrencyMismatchError
+            raise CurrencyMismatchError()
 
         currency = next(iter(currencies))
         debit = Money.zero(currency)

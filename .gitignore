@@ -1,15 +1,41 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*.so
 build/
 dist/
+*.egg-info/
 wheels/
-*.egg-info
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
 
-#vs code
-.vscode/
+# Environment files
 .env
-app/db
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Database
+app/db/
+*.db
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type checking
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# macOS
+.DS_Store
+__MACOSX/
