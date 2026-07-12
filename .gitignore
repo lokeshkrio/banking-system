@@ -12,4 +12,4 @@ wheels/
 #vs code
 .vscode/
 .env
-db
+app/db

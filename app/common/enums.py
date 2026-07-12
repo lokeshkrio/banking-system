@@ -3,14 +3,14 @@ All domain enums used across the platform. These map directly to
 PostgreSQL CHECK constraints on the corresponding columns.
 """
 
-from enum import Enum
+from enum import StrEnum
 
 # ----------------------------------------
 # User related enums
 # ----------------------------------------
 
 
-class UserStatus(str, Enum):
+class UserStatus(StrEnum):
     """User account lifecycle states.
 
     | Status    | Description                                             |
@@ -27,7 +27,7 @@ class UserStatus(str, Enum):
     PENDING = "PENDING"
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     """User roles defining platform access privileges.
 
     | Role     | Description                                           |
@@ -47,7 +47,7 @@ class UserRole(str, Enum):
 # ----------------------------------------
 
 
-class IdentityProvider(str, Enum):
+class IdentityProvider(StrEnum):
     """Authentication and identity providers.
 
     | Provider | Description                                     |
@@ -64,7 +64,7 @@ class IdentityProvider(str, Enum):
     APPLE = "APPLE"
 
 
-class DocumentType(str, Enum):
+class DocumentType(StrEnum):
     """Supported identity document types for verification.
 
     | Type            | Description                               |
@@ -79,7 +79,7 @@ class DocumentType(str, Enum):
     DRIVING_LICENSE = "DRIVING_LICENSE"
 
 
-class VerificationStatus(str, Enum):
+class VerificationStatus(StrEnum):
     """Identity verification/KYC status states.
 
     | Status   | Description                                           |
@@ -94,7 +94,7 @@ class VerificationStatus(str, Enum):
     REJECTED = "REJECTED"
 
 
-class OtpChannel(str, Enum):
+class OtpChannel(StrEnum):
     """Channels used for delivering one-time passwords (OTPs).
 
     | Channel | Description                              |
@@ -112,7 +112,7 @@ class OtpChannel(str, Enum):
 # ----------------------------------------
 
 
-class AccountStatus(str, Enum):
+class AccountStatus(StrEnum):
     """Account lifecycle states.
 
     State machine:
@@ -134,7 +134,7 @@ class AccountStatus(str, Enum):
     CLOSED = "CLOSED"
 
 
-class Currency(str, Enum):
+class Currency(StrEnum):
     """Supported currencies on the platform.
 
     | Currency | Description                  |
@@ -153,7 +153,7 @@ class Currency(str, Enum):
     CAD = "CAD"
 
 
-class AccountType(str, Enum):
+class AccountType(StrEnum):
     """Types of accounts.
 
     | Type      | Description                 |
@@ -186,7 +186,7 @@ ACCOUNT_TRANSITIONS: dict[AccountStatus, set[AccountStatus]] = {
 # ----------------------------------------
 
 
-class TransactionStatus(str, Enum):
+class TransactionStatus(StrEnum):
     """Transaction states.
 
     State machine:
@@ -226,7 +226,7 @@ TRANSACTION_TRANSITIONS: dict[TransactionStatus, set[TransactionStatus]] = {
 }
 
 
-class TransactionCategory(str, Enum):
+class TransactionCategory(StrEnum):
     """Categories of transactions.
 
     | Category   | Description                                |
@@ -241,7 +241,7 @@ class TransactionCategory(str, Enum):
     P2P = "P2P"
 
 
-class TransactionType(str, Enum):
+class TransactionType(StrEnum):
     """Specific transaction types within categories.
 
     | Type       | Description                                                 |
@@ -273,7 +273,7 @@ class TransactionType(str, Enum):
 # ----------------------------------------
 
 
-class DisputeReason(str, Enum):
+class DisputeReason(StrEnum):
     """Reasons cited for filing a transaction dispute.
 
     | Reason               | Description                                              |
@@ -294,7 +294,7 @@ class DisputeReason(str, Enum):
     OTHER = "OTHER"
 
 
-class DisputeStatus(str, Enum):
+class DisputeStatus(StrEnum):
     """Current state of a customer transaction dispute.
 
     | Status             | Description                                                 |
@@ -313,7 +313,7 @@ class DisputeStatus(str, Enum):
     CLOSED = "CLOSED"
 
 
-class DisputeResolution(str, Enum):
+class DisputeResolution(StrEnum):
     """Outcome/resolution of a finalized dispute.
 
     | Resolution                 | Description                                                 |
@@ -331,7 +331,7 @@ class DisputeResolution(str, Enum):
     NO_REFUND = "NO_REFUND"
 
 
-class RefundStatus(str, Enum):
+class RefundStatus(StrEnum):
     """Refund/chargeback states."""
 
     PENDING = "PENDING"
@@ -363,21 +363,21 @@ REFUND_TRANSITIONS: dict[RefundStatus, set[RefundStatus]] = {
 # ----------------------------------------
 
 
-class RewardStatus(str, Enum):
+class RewardStatus(StrEnum):
     ACTIVE = "ACTIVE"
     EXPIRED = "EXPIRED"
     REDEEMED = "REDEEMED"
     PENDING = "PENDING"
 
 
-class RewardType(str, Enum):
+class RewardType(StrEnum):
     CASHBACK = "CASHBACK"
     POINTS = "POINTS"
     DISCOUNT = "DISCOUNT"
     GIFT_CARD = "GIFT_CARD"
 
 
-class TierStatus(str, Enum):
+class TierStatus(StrEnum):
     BRONZE = "BRONZE"
     SILVER = "SILVER"
     GOLD = "GOLD"
@@ -389,7 +389,7 @@ class TierStatus(str, Enum):
 # ----------------------------------------
 
 
-class NotificationStatus(str, Enum):
+class NotificationStatus(StrEnum):
     SENT = "SENT"
     DELIVERED = "DELIVERED"
     READ = "READ"
@@ -397,7 +397,7 @@ class NotificationStatus(str, Enum):
     PENDING = "PENDING"
 
 
-class NotificationType(str, Enum):
+class NotificationType(StrEnum):
     TRANSACTION = "TRANSACTION"
     VERIFICATION = "VERIFICATION"
     MARKETING = "MARKETING"
@@ -410,7 +410,7 @@ class NotificationType(str, Enum):
 # ----------------------------------------
 # System & Admin enums
 # ----------------------------------------
-class AdminAction(str, Enum):
+class AdminAction(StrEnum):
     LOGIN = "LOGIN"
     LOGOUT = "LOGOUT"
     CREATE_USER = "CREATE_USER"

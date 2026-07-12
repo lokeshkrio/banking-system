@@ -31,14 +31,10 @@ class Money:
 
     def __post_init__(self) -> None:
         if not isinstance(self.amount_minor, int):
-            raise TypeError(
-                "amount_minor must be an integer."
-            )
+            raise TypeError("amount_minor must be an integer.")
 
         if not isinstance(self.currency_code, str):
-            raise TypeError(
-                "currency_code must be a string."
-            )
+            raise TypeError("currency_code must be a string.")
 
         code = self.currency_code.upper()
 
@@ -55,9 +51,7 @@ class Money:
 
     def _assert_money(self, other: object) -> Money:
         if not isinstance(other, Money):
-            raise TypeError(
-                f"Expected Money, got {type(other).__name__}"
-            )
+            raise TypeError(f"Expected Money, got {type(other).__name__}")
         return other
 
     def _assert_same_currency(
@@ -110,9 +104,7 @@ class Money:
 
     def __mul__(self, factor: int) -> Money:
         if not isinstance(factor, int):
-            raise TypeError(
-                "Money can only be multiplied by integers."
-            )
+            raise TypeError("Money can only be multiplied by integers.")
 
         return Money(
             self.amount_minor * factor,
@@ -202,9 +194,8 @@ class Money:
         Example:
             Money.from_major("12.34", "USD")
         """
-        code = currency_code.upper()
         if scale is None:
-            scale = CURRENCY_SCALES.get(code, 2)
+            scale = CURRENCY_SCALES.get(currency_code.upper(), 2)
 
         d = Decimal(str(amount))
 
@@ -215,9 +206,7 @@ class Money:
             rounding=ROUND_HALF_EVEN,
         )
 
-        minor = int(
-            d * (10**scale)
-        )
+        minor = int(d * (10**scale))
 
         return cls(
             minor,
@@ -235,10 +224,7 @@ class Money:
     ) -> Decimal:
         if scale is None:
             scale = CURRENCY_SCALES.get(self.currency_code, 2)
-        return (
-            Decimal(self.amount_minor)
-            / Decimal(10**scale)
-        )
+        return Decimal(self.amount_minor) / Decimal(10**scale)
 
     def convert(
         self,
@@ -256,6 +242,7 @@ class Money:
 
         if rate is None:
             from app.forex.rates import get_exchange_rate
+
             rate = get_exchange_rate(self.currency_code, target_currency)
 
         dec_rate = Decimal(str(rate))
@@ -266,7 +253,9 @@ class Money:
         target_major = source_major * dec_rate
 
         target_scale = CURRENCY_SCALES.get(target_currency, 2)
-        quant = Decimal("1." + ("0" * target_scale)) if target_scale > 0 else Decimal("1")
+        quant = (
+            Decimal("1." + ("0" * target_scale)) if target_scale > 0 else Decimal("1")
+        )
 
         target_major_rounded = target_major.quantize(quant, rounding=ROUND_FLOOR)
         target_minor = int(target_major_rounded * (10**target_scale))
@@ -290,10 +279,7 @@ class Money:
     def __str__(self) -> str:
         major = self.to_major()
 
-        return (
-            f"{self.currency_code} "
-            f"{major:,.2f}"
-        )
+        return f"{self.currency_code} " f"{major:,.2f}"
 
     def __repr__(self) -> str:
         return (

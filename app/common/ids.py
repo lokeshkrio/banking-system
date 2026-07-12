@@ -1,8 +1,5 @@
-import uuid
-import random
 import secrets
-import string
-
+import uuid
 
 # common id generation strategy for fintech system
 # User ID                 -> UUIDv7
@@ -31,7 +28,7 @@ def parse_prefixed_id(full_id: str) -> tuple[str, uuid.UUID]:
         raise ValueError(f"Invalid prefixed ID format: {full_id}")
 
     prefix, uid_str = parts
-    return prefix, str(uid_str)
+    return prefix, uuid.UUID(uid_str)
 
 
 def get_prefix_from_id(full_id: str) -> str:
@@ -52,7 +49,7 @@ def validate_prefix(prefixed_id: str, expected_prefix: str) -> bool:
 # ----------------------------------------
 
 
-def mod11_compute_check_digit(base_str: str, weights: list[int] | None = None) -> int:
+def mod11_compute_check_digit(base_str: str, weights: list[int] | None = None) -> int | None:
     """Compute Mod11 check digit."""
     if weights is None:
         weights = [2, 3, 4, 5, 6, 7, 8, 9]
@@ -64,10 +61,9 @@ def mod11_compute_check_digit(base_str: str, weights: list[int] | None = None) -
 
     if rem == 0:
         return 0
-    elif rem == 1:
+    if rem == 1:
         return None
-    else:
-        return 11 - rem
+    return 11 - rem
 
 
 def mod11_validate(number: str) -> bool:
