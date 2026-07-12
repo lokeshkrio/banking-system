@@ -4,6 +4,7 @@
         "chargeback",
         "ECOM",
         "IBAN",
-        "luhn"
+        "luhn",
+        "unitybankx"
     ]
 }
